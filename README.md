@@ -1,10 +1,8 @@
 ## RankCompV3
 
-​	RankCompV3 is a differentially expressed gene recognition algorithm based on relative expression order relation REO. The tool is developed based on the julia language, and the software is available for direct use. The details are described below. julia recommends using version 1.7 or later.
+​	RankCompV3 is a differentially expressed gene recognition algorithm based on relative expression order relation REO. The tool is developed based on the julia language. The details are described below. julia recommends using version 1.7 or later.
 
 **RankCompV3 package in julia：https://github.com/yanjer/RankCompV3.jl.git**
-
-**RankCompV3 software：https://github.com/yanjer/RankCompV3-software.git**
 
 ### Scope of application of RankCompV3
 
@@ -71,25 +69,13 @@ git clone https://github.com/yanjer/RankCompV3.jl.git
 julia --project=RankCompV3 [path]/RankCompV3/src/RankCompV3.jl
 ```
 
-#### RankCompV3 software
-
-[RankCompV3-software](https://github.com/yanjer/RankCompV3-software)
-
-```shell
-#configured in linux
-#clone RankCompV3 software from github to local
-git clone https://github.com/yanjer/RankCompV3-software.git
-#unzip
-unzip RankCompV3-software.zip
-```
-
 ### Parameters for details
 
 | Parameter        | Parameter types              | Default value     | Parameters to describe                                       |
 | ---------------- | ---------------------------- | ----------------- | ------------------------------------------------------------ |
 | fn_expr          | AbstractString               | fn_expr.txt       | Gene expression profile file path. (required)                |
 | fn_metadata      | AbstractStringAbstractString | fn_metadata.txt   | Grouping information file path. (required)                   |
-| expr_threshold   | NumberNumber                 | 0                 | Gene expression threshold.                                   |
+| expr_threshold   | NumberNumber                 | 3                 | Gene expression threshold.                                   |
 | pval_reo         | AbstractFloatAbstractFloat   | 0.01              | Stable threshold for p-value.                                |
 | pval_sign_reo    | AbstractFloatAbstractFloat   | 1.00              | Significant  reversal threshold for p-value.                 |
 | padj_sign_reo    | AbstractFloatAbstractFloat   | 0.05              | Significant reversal threshold for FDR  value.               |
@@ -165,18 +151,6 @@ reoa("expr.txt",
     )
 ```
 
-#### RankCompV3 software
-
-[RankCompV3-software](https://github.com/yanjer/RankCompV3-software)
-
-```shell
-#Used in linux
-#See the help
-RankCompV3-software/bin/RankCompV3 -h
-#runing code
-RankCompV3-software/bin/RankCompV3 --fn_expr "fn_expr.txt" --fn_metadata "fn_metadata.txt" --expr_threshold 0 --pval_reo 0.01 --pval_sign_reo 1.00 --padj_sign_reo 0.05 --hk_file "/home/yanj/jupyter_work/McCullagh/outcome_complete/HK_genes_info.tsv" --hk_name "ENSEMBL" --ref_gene_num 3000 --use_housekeeping "yes" --species "human" --cell_drop_rate 0 --gene_drop_rate 0 --work_dir ./ --use_testdata "no"
-```
-
 ### Output File Description
 
 #### Resulting file
@@ -237,19 +211,6 @@ reoa(use_testdata="yes")
 reoa("/public/yanj/data/fn_expr.txt",
 	"/public/yanj/data/fn_metadata.txt"
 )
-```
-
-##### RankCompV3 software
-
-[RankCompV3-software](https://github.com/yanjer/RankCompV3-software)
-
-```shell
-#See the help
-RankCompV3/bin/RankCompV3 -h
-#The package comes with test data. Use the default parameters. If you need to modify the parameters, add them directly.
-RankCompV3/bin/RankCompV3 --use_testdata "yes"
-#Or local file. Use Default parameters. If you want to modify the parameters, add them directly.
-RankCompV3/bin/RankCompV3 --fn_expr "/public/yanj/data/fn_expr.txt" --fn_metadata "/public/yanj/data/fn_metadata.txt"
 ```
 
 #### Input File
