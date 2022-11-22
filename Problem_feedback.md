@@ -4,6 +4,10 @@
 
 ##### 1. ERROR: UndefVarError: writeshortest is not defined.
 
-This is because the writeshortest function was disabled in Parsers 2.5.0 in early November. You can use "add Parsers@2.4.2" for version back compatibility.
+This is because the writeshortest function was disabled in Parsers 2.5.0 in early November. You can use  Parsers2.4.2 for version back compatibility.
+
+```julia
+add Parsers@2.4.2
+```
 
 [Playing with ideas on how to better componentize internal parsing by quinnj · Pull Request #127 · JuliaData/Parsers.jl (github.com)](https://github.com/JuliaData/Parsers.jl/pull/127)
