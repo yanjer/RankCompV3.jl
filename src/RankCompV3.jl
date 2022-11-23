@@ -14,7 +14,7 @@ using HypothesisTests
 using Distributions
 using Random
 using LinearAlgebra
-using Parsers
+using ArgParse
 
 
 export reoa
