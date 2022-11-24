@@ -1,7 +1,7 @@
 name = "RankCompV3"
 uuid = "4cb800f8-6e34-42b5-a258-cba768800361"
 authors = ["yan jing <yanjer123@qq.com>"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
