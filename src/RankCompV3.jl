@@ -165,7 +165,7 @@ function compare_reos(ctrl::AbstractMatrix,
 	"""
 	Compute p-value for each gene.
 	"""
-	 r_ctrl,  c_ctrl = size(ctrl)
+	r_ctrl,  c_ctrl = size(ctrl)
 	r_treat, c_treat = size(treat)
 	r_ctrl == r_treat || throw(DimensionMismatch("the number of rows of 'ctrl' not equal to the number of rows of 'treat'."))
     r_ctrl == length(ref_gene)|| throw(DimensionMismatch("the number of rows of 'ctrl' not equal to the length of 'ref_gene'."))
