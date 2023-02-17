@@ -28,7 +28,7 @@ The analysis results and a few plots will be generated and saved in the current 
 The first return value is a DataFrame, where rows are genes and columns are statistical values for each gene. All the genes passing the basic preprocessing step are retained. 
 
 
-```
+```julia
 julia> result
 (19999×16 DataFrame
    Row │ Name     pval         padj        n11      n12      n13      n21      n22      n23      n31      n32      n33      Δ1           Δ2          se         z1
