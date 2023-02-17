@@ -40,11 +40,11 @@ julia> result
 
 - **metadata file (required).**
 
-  First column sample name, second column group information.
+  The metadata file needs to contain two columns of information. The first column is the sample name that matches the expression profile, and the second column is the grouping information.
 
 - **expression profile file (required).**
 
-  Each row represents the gene, each column represents the sample and the expression matrix of the gene in the first column.
+  The expression profile should contain gene, sample and expression value information. The row represents the gene, and the column represents the sample, among which the first behavior sample name and the first column gene name.
 
 ```julia
 # Use the default values for the following other parameters. If you want to modify the parameters, add them directly.
@@ -75,23 +75,23 @@ julia> reoa("/public/yanj/data/fn_expr.txt",
 
 ### Parameters for details
 
-| Parameter      | Parameter types              | Default value     | Parameters to describe                                       |
-| -------------- | ---------------------------- | ----------------- | ------------------------------------------------------------ |
-| fn_expr        | AbstractString               | fn_expr.txt       | Gene expression profile file path. (required)                |
-| fn_metadata    | AbstractStringAbstractString | fn_metadata.txt   | Grouping information file path. (required)                   |
-| expr_threshold | NumberNumber                 | 0                 | Gene expression threshold.                                   |
-| min_profiles   | Int                          | 0                 | Include features (genes) detected in at least this many cells. |
-| min_features   | Int                          | 0                 | Include profiles (cells) where at least this many features are detected. |
-| pval_reo       | AbstractFloatAbstractFloat   | 0.01              | Stable threshold for p-value.                                |
-| pval_deg       | AbstractFloatAbstractFloat   | 0.05              | Significant  reversal threshold for p-value.                 |
-| padj_deg       | AbstractFloatAbstractFloat   | 0.05              | Significant reversal threshold for FDR  value.               |
-| use_pseudobulk | Int                          | 0                 | 0 for not using pseudobulk mode, 1 for automatic, 2~5 not used, 6~100 for number of pseudobulk profiles in each group. |
-| use_hk_genes   | AbstractString               | yes               | Whether to use the housekeeping gene, yes or no.             |
-| hk_file        | AbstractString               | HK_genes_info.tsv | Housekeeper gene  file path.                                 |
-| gene_name_type | AbstractString               | ENSEMBL           | Available choices: ENSEMBL, Symbol, ENTREZID ...             |
-| ref_gene_max   | Int                          | 3000              | If the number of available features is higher than this, take a random sample of this size. |
-| refinement     | Int                          | 100               | If the number is lower than this, ignore the house-keeping genes. |
-| n_iter         | Int                          | 128               | Max iterations.                                              |
-| n_conv         | Int                          | 5                 | Convergence condition: max. difference in the number of DEGs between two consective iterations |
-| work_dir       | AbstractString               | ./                | Working Directory.                                           |
-| use_testdata   | AbstractString               | no                | Whether to use the default provided test data for analysis, yes or no. |
+| Parameter      | Parameter types | Default value       | Parameters to describe                                       |
+| -------------- | --------------- | ------------------- | ------------------------------------------------------------ |
+| fn_expr        | AbstractString  | "fn_expr.txt"       | Gene expression profile file path. (required)                |
+| fn_metadata    | AbstractString  | "fn_metadata.txt"   | Grouping information file path. (required)                   |
+| expr_threshold | Number          | 0                   | Gene expression threshold.                                   |
+| min_profiles   | Int             | 0                   | Include features (genes) detected in at least this many cells. |
+| min_features   | Int             | 0                   | Include profiles (cells) where at least this many features are detected. |
+| pval_reo       | AbstractFloat   | 0.01                | Stable threshold for p-value.                                |
+| pval_deg       | AbstractFloat   | 0.05                | Significant  reversal threshold for p-value.                 |
+| padj_deg       | AbstractFloat   | 0.05                | Significant reversal threshold for FDR  value.               |
+| use_pseudobulk | Int             | 0                   | 0 for not using pseudobulk mode, 1 for automatic, 2~5 not used, 6~100 for number of pseudobulk profiles in each group. |
+| use_hk_genes   | AbstractString  | "yes"               | Whether to use the housekeeping gene, yes or no.             |
+| hk_file        | AbstractString  | "HK_genes_info.tsv" | House-keeping genes  file path.                              |
+| gene_name_type | AbstractString  | "ENSEMBL"           | Available choices: Name, REFSEQ, SYMBOL, ENTREZID, ENSEMBL, UNIGENE and GENENAME. |
+| ref_gene_max   | Int             | 3000                | If the number of available features is higher than this, take a random sample of this size. |
+| refinement     | Int             | 100                 | If the number is lower than this, ignore the house-keeping genes. |
+| n_iter         | Int             | 128                 | Max iterations.                                              |
+| n_conv         | Int             | 5                   | Convergence condition: max. difference in the number of DEGs between two consective iterations. |
+| work_dir       | AbstractString  | "./"                | Working Directory.                                           |
+| use_testdata   | AbstractString  | "no"                | Whether to use the default provided test data for analysis, yes or no. |
