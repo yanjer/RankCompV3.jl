@@ -4,7 +4,7 @@ RankCompV3 is a differential expression analysis algorithm based on relative exp
 
 ### Installation
 
-The algorithm is implemented in Julia. Version 1.7 or later is recommended. The simpliest way to install is use the `Pkg` facility in Julia. 
+The algorithm is implemented in Julia. Version 1.7 or later is recommended. The simpliest way to install is using the `Pkg` facility in Julia. 
 
 ```julia
 using Pkg
