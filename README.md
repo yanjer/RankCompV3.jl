@@ -38,11 +38,11 @@ julia> result
 
 ##### Input: 
 
-- **metadata file.**
+- **metadata file (required).**
 
   First column sample name, second column group information.
 
-- **expression profile file.**
+- **expression profile file (required).**
 
   Each row represents the gene, each column represents the sample and the expression matrix of the gene in the first column.
 
@@ -51,8 +51,8 @@ julia> result
 julia> reoa("/public/yanj/data/fn_expr.txt",
 		"/public/yanj/data/fn_metadata.txt")
 #Specific parameter example
-julia> reoa("expr.txt",
-    	"metadata.txt";
+julia> reoa("/public/yanj/data/fn_expr.txt",
+    	"/public/yanj/data/fn_metadata.txt";
     	expr_threshold = 0,
     	min_profiles = 0,
     	min_features = 0,
