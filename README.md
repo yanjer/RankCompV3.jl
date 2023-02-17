@@ -167,4 +167,4 @@ Below lists the optional keyword parameters and their default values.
 
 ##### log file
 
-- [RankCompV3-test-data-output.log](
+- [RankCompV3-test-data-output.log](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/RankCompV3_test_data_output.log)
