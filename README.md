@@ -16,7 +16,7 @@ Pkg.add("RankCompV3")
 #### case 1: use test data for analysis. 
 
 ```julia
-julia> using RankCompV3  # For details about how to download the RankCompV3 package, see 4.
+julia> using RankCompV3
 # Use the default values for the following other parameters. If you need to modify the parameters, add them directly.
 julia> result = reoa(use_testdata="yes")
 # The results are saved in the current directory. Including result file, ctrl and treat group expression profile file, as well as pval, padj, 3 x 3 associative table parameters, Δ1, Δ2, se, z1 distribution, etc
@@ -47,6 +47,7 @@ julia> result
   The expression profile should contain gene, sample and expression value information. The row represents the gene, and the column represents the sample, among which the first behavior sample name and the first column gene name.
 
 ```julia
+julia> using RankCompV3
 # Use the default values for the following other parameters. If you want to modify the parameters, add them directly.
 julia> reoa("/public/yanj/data/fn_expr.txt",
 		"/public/yanj/data/fn_metadata.txt")
