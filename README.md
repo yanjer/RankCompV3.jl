@@ -96,9 +96,24 @@ julia> reoa("/public/yanj/data/fn_expr.txt",
     	use_testdata = "no")
 ```
 
-Below lists the optional keyword parameters and their default values.
+#### Pseudobulk method
 
-### Parameters
+For scRNA-seq data, one can carry out a pseudobulk analysis. Rather than using the original single-cell profiles, pseudobulk profiles can be generated and used for DEG analysis. In this method, a random subset of cells from a group is aggregated into a pseudo-bulk profile. 
+
+The pseudobulk method can be turned on by setting `use_pseudobulk = 1`. 
+
+```julia
+julia> reoa("scRNA_expr.txt",
+    	"scRNA_metadata.txt",
+    	use_pseudobulk = 1)
+```
+
+By default, the analysis does not use the pseudobulk method (`use_pseudobulk = 0`).  If a value between `6` and `100` is passed to `use_pseudobulk`, that number of pseudobulk profiles will be generated and used for analysis. Other values (except `0` which turns off the pseudobulk method) will generate the default value (`10`) profiles. 
+
+
+### Optional Parameters
+
+Below lists the optional keyword parameters and their default values.
 
 | Parameter      | Parameter types | Default value       | Parameters to describe                                       |
 | -------------- | --------------- | ------------------- | ------------------------------------------------------------ |
