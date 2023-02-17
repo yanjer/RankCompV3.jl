@@ -49,5 +49,5 @@ julia> result
 ```julia
 # Use the default values for the following other parameters. If you want to modify the parameters, add them directly.
 julia> reoa("/public/yanj/data/fn_expr.txt",
-			"/public/yanj/data/fn_metadata.txt")
+	"/public/yanj/data/fn_metadata.txt")
 ```
