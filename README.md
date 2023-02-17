@@ -50,18 +50,18 @@ You need to prepare two input files before the analysis: metadata file and expre
 - **metadata file (required).**
 
  The metadata file contains at least two columns. The first column is the sample names, and the second column is the grouping information. Only two groups are supported at present, therefore, do not include more than two groups. 
- 
+
  Column names for a metadata should be `Name` and `Group`. 
- 
- See an example metadata file. 
- 
+
+ See an example metadata file. [fn_metadata.txt](https://github.com/yanjer/RankCompV3.jl/blob/master/test/fn_metadata.txt)
+
 
 - **expression matrix file (required).**
 
  The first column is the gene name and the column header should be `Name` and the rest columns are profiles for each cell or each sample. Each column header should be the sample name which appears in the metadata file.
- 
- See an example expression matrix file.
- 
+
+ See an example expression matrix file.[fn_expr.txt](https://github.com/yanjer/RankCompV3.jl/blob/master/test/fn_expr.txt)
+
 Once the files are ready, you can carry out the DEG analysis with the default settings as follows. 
 
 ```julia
@@ -135,3 +135,34 @@ Below lists the optional keyword parameters and their default values.
 | n_conv         | Int             | 5                   | Convergence condition: max. difference in the number of DEGs between two consective iterations. |
 | work_dir       | AbstractString  | "./"                | Working Directory.                                           |
 | use_testdata   | AbstractString  | "no"                | Whether to use the default provided test data for analysis, yes or no. |
+
+#### Example output file: 
+
+- The expression profile of the ctrl group.  (See [fn_metadata.txt](https://github.com/yanjer/RankCompV3.jl/blob/master/test/fn_metadata.txt))
+
+- The expression profile of the treat group.  (See [fn_expr_treat.tsv](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_treat.tsv))
+
+- This file contains Name, pval, padj, n11, n12, n13, n21, n22, n23, n31, n32, n33, Δ1, Δ2, se, z1.  (See [fn_expr_result.tsv](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_result.tsv))
+
+- Graph of Distribution of Expression Values.  (See [fn_expr_expr_dist.pdf](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_expr_dist.pdf))
+
+- Heat maps of expression values for the ctrl and treat groups.  (See [fn_expr_expr_heat.pdf](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_expr_heat.pdf))
+
+- Distribution of parameters in 3 x 3 contingency tables.  (See [fn_expr_contigency_table.pdf](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_contigency_table.pdf))
+
+- Delta distribution.  (See [fn_expr_delta_value.pdf](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_delta_value.pdf))
+
+- Distribution of Standard Error (SE).  (See [fn_expr_se.pdf](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_se.pdf))
+
+- Distribution of z1.  (See [fn_expr_z1.pdf](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_z1.pdf))
+
+- Distribution of p and FDR values.  (See [fn_expr_p_value.pdf](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_p_value.pdf))
+
+- Distribution of expression values for DEGs.  (See [fn_expr_degs_expr_dist.pdf](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_degs_expr_dist.pdf))
+
+- Heat map of the expression values of DEGs in the ctrl and treat groups.  (See [fn_expr_degs_expr_heat.pdf](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_degs_expr_heat.pdf))
+
+
+##### log file
+
+- [RankCompV3-test-data-output.log](
