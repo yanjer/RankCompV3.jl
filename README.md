@@ -1,10 +1,10 @@
 ## About RankCompV3 
 
-RankCompV3 is a differential expression analysis algorithm based on relative expression ordering (REO) of gene pairs. It can be applied to bulk or single-cell RNA-sequencing (scRNA-seq) data, microarray gene expression profiles and proteomics profiles, etc. When applied in scRNA-seq data, it can run in single-cell mode or pseudo-bulk mode. The pseudo-bulk mode is expected to improve the accuracy while decreasing cost. 
+RankCompV3 is a differential expression analysis algorithm based on relative expression ordering (REO) of gene pairs. It can be applied to bulk or single-cell RNA-sequencing (scRNA-seq) data, microarray gene expression profiles and proteomics profiles, etc. When applied in scRNA-seq data, it can run in single-cell mode or pseudo-bulk mode. The pseudo-bulk mode is expected to improve the accuracy while decreasing runntime and memory cost. 
 
 ### Installation
 
-The algorithm is implemented in Julia. Version 1.7 or later is recommended.
+The algorithm is implemented in Julia. Version 1.7 or later is recommended. The simpliest way to install 
 
 ```julia
 using Pkg
@@ -13,13 +13,22 @@ Pkg.add("RankCompV3")
 
 ### Examples
 
-#### case 1: use test data for analysis. 
+#### Quick Start
+
+Run a test job with the input files distributed with the package.
 
 ```julia
 julia> using RankCompV3
 # Use the default values for the following other parameters. If you need to modify the parameters, add them directly.
 julia> result = reoa(use_testdata="yes")
-# The results are saved in the current directory. Including result file, ctrl and treat group expression profile file, as well as pval, padj, 3 x 3 associative table parameters, Δ1, Δ2, se, z1 distribution, etc
+```
+
+The analysis results and a few plots will be generated and saved in the current work directory. They are also returned by the `reoa` function and can be captured by assign the returned values to a variable,  e.g., `result` in the above example.  
+
+The first return value is a DataFrame, where rows are genes and columns are statistical values for each gene. All the genes passing the basic preprocessing step are retained. 
+
+
+```
 julia> result
 (19999×16 DataFrame
    Row │ Name     pval         padj        n11      n12      n13      n21      n22      n23      n31      n32      n33      Δ1           Δ2          se         z1
@@ -34,48 +43,17 @@ julia> result
                                                                                                                                              19965 rows omitted, 19999×16
 ```
 
-##### Sample test data output file: 
-
-- The expression profile of the ctrl group.  (See [fn_metadata.txt](https://github.com/yanjer/RankCompV3.jl/blob/master/test/fn_metadata.txt))
-
-- The expression profile of the treat group.  (See [fn_expr_treat.tsv](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_treat.tsv))
-
-- This file contains Name, pval, padj, n11, n12, n13, n21, n22, n23, n31, n32, n33, Δ1, Δ2, se, z1.  (See [fn_expr_result.tsv](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_result.tsv))
-
-- Graph of Distribution of Expression Values.  (See [fn_expr_expr_dist.pdf](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_expr_dist.pdf))
-
-- Heat maps of expression values for the ctrl and treat groups.  (See [fn_expr_expr_heat.pdf](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_expr_heat.pdf))
-
-- Distribution of parameters in 3 x 3 contingency tables.  (See [fn_expr_contigency_table.pdf](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_contigency_table.pdf))
-
-- Delta distribution.  (See [fn_expr_delta_value.pdf](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_delta_value.pdf))
-
-- Distribution of Standard Error (SE).  (See [fn_expr_se.pdf](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_se.pdf))
-
-- Distribution of z1.  (See [fn_expr_z1.pdf](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_z1.pdf))
-
-- Distribution of p and FDR values.  (See [fn_expr_p_value.pdf](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_p_value.pdf))
-
-- Distribution of expression values for DEGs.  (See [fn_expr_degs_expr_dist.pdf](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_degs_expr_dist.pdf))
-
-- Heat map of the expression values of DEGs in the ctrl and treat groups.  (See [fn_expr_degs_expr_heat.pdf](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_degs_expr_heat.pdf))
-
-
-##### log file
-
-- [RankCompV3-test-data-output.log](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/RankCompV3_test_data_output.log)
-
 #### case 2: use local files for analysis. 
 
 ##### Input: 
 
 - **metadata file (required).**
 
-  The metadata file needs to contain two columns of information. The first column is the sample name that matches the expression profile, and the second column is the grouping information. (For example, [fn_metadata.txt](https://github.com/yanjer/RankCompV3.jl/blob/master/test/fn_metadata.txt))
+  The metadata file needs to contain two columns of information. The first column is the sample name that matches the expression profile, and the second column is the grouping information.
 
 - **expression profile file (required).**
 
-  The expression profile should contain gene, sample and expression value information. The row represents the gene, and the column represents the sample, among which the first behavior sample name and the first column gene name. (For example, [fn_expr.txt](https://github.com/yanjer/RankCompV3.jl/blob/master/test/fn_expr.txt))
+  The expression profile should contain gene, sample and expression value information. The row represents the gene, and the column represents the sample, among which the first behavior sample name and the first column gene name.
 
 ```julia
 julia> using RankCompV3
