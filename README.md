@@ -33,7 +33,6 @@ julia> reoa(use_testdata="yes")  # #The package comes with test data. Use the de
  19998 │ EE19999  0.344847     0.823375     1475.0    307.0      0.0   1756.0  15356.0    128.0      0.0     38.0      2.0   1.52307      1.41599    0.0525798    28.9668
  19999 │ EE20000  0.694484     0.980397     1571.0    315.0      0.0    979.0  15555.0    362.0      1.0    225.0     54.0   0.63329      0.577392   0.0481845    13.143
                                                                                                                                              19965 rows omitted, 19999×16
-
 #Or local data. Use Default parameters. If you want to modify the parameters, add them directly.
 julia> reoa("/public/yanj/data/fn_expr.txt",
 	"/public/yanj/data/fn_metadata.txt")
