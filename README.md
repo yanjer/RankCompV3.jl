@@ -50,7 +50,7 @@ julia> result
 # Use the default values for the following other parameters. If you want to modify the parameters, add them directly.
 julia> reoa("/public/yanj/data/fn_expr.txt",
 		"/public/yanj/data/fn_metadata.txt")
-#Specific parameter example
+# Specific parameter example
 julia> reoa("/public/yanj/data/fn_expr.txt",
     	"/public/yanj/data/fn_metadata.txt";
     	expr_threshold = 0,
