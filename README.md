@@ -13,7 +13,7 @@ Pkg.add("RankCompV3")
 
 ### Examples
 
-#### case 1: analyze test data. 
+#### case 1: use test data for analysis. 
 
 ```julia
 julia> using RankCompV3  # For details about how to download the RankCompV3 package, see 4.
