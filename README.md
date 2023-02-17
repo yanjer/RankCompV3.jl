@@ -4,6 +4,68 @@
 
 **RankCompV3 package in julia：https://github.com/pathint/RankCompV3.jl**
 
+##### Documentation can be accessed at the REPL or in [IJulia](https://github.com/JuliaLang/IJulia.jl) by typing `?` followed by the name of a function or macro, and pressing `Enter`. For example,
+
+```julia
+?RankCompV3
+```
+
+### Install
+
+```julia
+using Pkg
+Pkg.add("RankCompV3")
+```
+
+### Example
+
+```julia
+julia> using RankCompV3  # #For details about how to download the RankCompV3 package, see 4.
+julia> reoa(use_testdata="yes")  # #The package comes with test data. Use the default parameters. If you need to modify the parameters, add them directly.
+(19999×16 DataFrame
+   Row │ Name     pval         padj        n11      n12      n13      n21      n22      n23      n31      n32      n33      Δ1           Δ2          se         z1
+       │ String   Float64      Float64     Float64  Float64  Float64  Float64  Float64  Float64  Float64  Float64  Float64  Float64      Float64     Float64    Float64
+───────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+     1 │ DE1      0.23566      0.716036     1532.0     75.0      0.0   1220.0  11010.0    602.0     16.0   2933.0   1674.0   1.91208      1.81954    0.0393608    48.5783
+     2 │ DE2      0.280118     0.761567     2277.0    288.0      0.0    965.0  11514.0    372.0     20.0   2615.0   1011.0   1.74141      1.70287    0.0405313    42.9647
+     3 │ DE3      0.0578546    0.359121     1576.0     37.0      0.0   1376.0   8716.0    293.0    113.0   5211.0   1740.0   3.05828      3.02011    0.0437133    69.9623
+⋮   │    ⋮          ⋮           ⋮          ⋮        ⋮        ⋮        ⋮        ⋮        ⋮        ⋮        ⋮        ⋮          ⋮           ⋮           ⋮           ⋮
+ 19998 │ EE19999  0.344847     0.823375     1475.0    307.0      0.0   1756.0  15356.0    128.0      0.0     38.0      2.0   1.52307      1.41599    0.0525798    28.9668
+ 19999 │ EE20000  0.694484     0.980397     1571.0    315.0      0.0    979.0  15555.0    362.0      1.0    225.0     54.0   0.63329      0.577392   0.0481845    13.143
+                                                                                                                                             19965 rows omitted, 19999×16
+
+#Or local data. Use Default parameters. If you want to modify the parameters, add them directly.
+julia> reoa("/public/yanj/data/fn_expr.txt",
+	"/public/yanj/data/fn_metadata.txt")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ### Scope of application of RankCompV3
 
 | Classification                              | Applicable scope                                             |
@@ -43,10 +105,8 @@ Statistics
 ##### Use directly
 
 ```shell
-#Load Pkg in julia
-using Pkg
-#The RankCompV3 package is required for the first use
-Pkg.add("RankCompV3")
+using Pkg #Load Pkg in julia
+Pkg.add("RankCompV3") #The RankCompV3 package is required for the first use
 #or
 Pkg.add(url="https://github.com/pathint/RankCompV3.jl.git")
 ```
@@ -54,15 +114,10 @@ Pkg.add(url="https://github.com/pathint/RankCompV3.jl.git")
 ##### Local run usage
 
 ```shell
-#configured in linux
-#clone the RankCompV3 package from github to local
-git clone https://github.com/pathint/RankCompV3.jl.git
-#Load the project dependency package
-#[path] is the path from git clone https://github.com/yanjer/RankCompV3.git
-julia --project=RankCompV3
-#Download dependency packages
+git clone https://github.com/pathint/RankCompV3.jl.git#clone the RankCompV3 package from github to local
+julia --project=RankCompV3 #[path] is the path from git clone https://github.com/yanjer/RankCompV3.git
 ##Enter Pkg mode. ]
-instantiate
+instantiate  #Download dependency packages
 ```
 
 ### Parameters for details
@@ -225,10 +280,8 @@ This file shows a heat map of the expression values of DEGs in the ctrl and trea
 ###### Use directly
 
 ```julia
-#For details about how to download the RankCompV3 package, see 4.
-using RankCompV3
-#The package comes with test data. Use the default parameters. If you need to modify the parameters, add them directly.
-reoa(use_testdata="yes")
+using RankCompV3 #For details about how to download the RankCompV3 package, see 4.
+reoa(use_testdata="yes") #The package comes with test data. Use the default parameters. If you need to modify the parameters, add them directly.
 #Or local data. Use Default parameters. If you want to modify the parameters, add them directly.
 reoa("/public/yanj/data/fn_expr.txt",
 	"/public/yanj/data/fn_metadata.txt"
@@ -238,12 +291,9 @@ reoa("/public/yanj/data/fn_expr.txt",
 ###### Local run usage
 
 ```julia
-#For details about how to download the RankCompV3 package, see 4.
-##[path] indicates the storage path.
-include("[path]/RankCompV3/src/RankCompV3.jl")
+include("[path]/RankCompV3/src/RankCompV3.jl") ##[path] indicates the storage path.
 using Main.RankCompV3
-#The package comes with test data. Use the default parameters. If you need to modify the parameters, add them directly.
-reoa(use_testdata="yes")
+reoa(use_testdata="yes") #The package comes with test data. Use the default parameters. If you need to modify the parameters, add them directly.
 #Or local data. Use Default parameters. If you want to modify the parameters, add them directly.
 reoa("/public/yanj/data/fn_expr.txt",
 	"/public/yanj/data/fn_metadata.txt"
