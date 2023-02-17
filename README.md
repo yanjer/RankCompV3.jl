@@ -61,6 +61,8 @@ You need to prepare two input files before the analysis: metadata file and expre
  The first column is the gene name and the column header should be `Name` and the rest columns are profiles for each cell or each sample. Each column header should be the sample name which appears in the metadata file.
 
  See an example expression matrix file.[fn_expr.txt](https://github.com/yanjer/RankCompV3.jl/blob/master/test/fn_expr.txt)
+ 
+ Raw counts or expression values are recommended to use. Other values, e.g, FPKM, RPKM, TPM, log(counts) and log(normalized counts), can also be used, though normalization and batch effect removal are neither necessary nor recommended. 
 
 Once the files are ready, you can carry out the DEG analysis with the default settings as follows. 
 
@@ -138,9 +140,9 @@ Below lists the optional keyword parameters and their default values.
 
 #### Example output file: 
 
-- The expression profile of the ctrl group.  (See [fn_metadata.txt](https://github.com/yanjer/RankCompV3.jl/blob/master/test/fn_metadata.txt))
+- The expression profile of the ctrl group (after preprocessing).  (See [fn_metadata.txt](https://github.com/yanjer/RankCompV3.jl/blob/master/test/fn_metadata.txt))
 
-- The expression profile of the treat group.  (See [fn_expr_treat.tsv](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_treat.tsv))
+- The expression profile of the treat group (after preprocessing).  (See [fn_expr_treat.tsv](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_treat.tsv))
 
 - This file contains Name, pval, padj, n11, n12, n13, n21, n22, n23, n31, n32, n33, Δ1, Δ2, se, z1.  (See [fn_expr_result.tsv](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_result.tsv))
 
