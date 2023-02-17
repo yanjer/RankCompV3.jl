@@ -42,7 +42,7 @@ julia> result
 
   First column sample name, second column group information.
 
-- **Expression profile file. **
+- **Expression profile file. 
 
   Each row represents the gene, each column represents the sample and the expression matrix of the gene in the first column.
 
