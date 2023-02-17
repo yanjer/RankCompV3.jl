@@ -4,7 +4,7 @@ RankCompV3 is a differential expression analysis algorithm based on relative exp
 
 ### Installation
 
-The algorithm is implemented in Julia. Version 1.7 or later is recommended. The simpliest way to install 
+The algorithm is implemented in Julia. Version 1.7 or later is recommended. The simpliest way to install is use the `Pkg` facility in Julia. 
 
 ```julia
 using Pkg
@@ -43,26 +43,39 @@ julia> result
                                                                                                                                              19965 rows omitted, 19999×16
 ```
 
-#### case 2: use local files for analysis. 
+#### Run your own DEG analysis
 
-##### Input: 
+You need to prepare two input files before the analysis: metadata file and expression matrix. Both of them should be saved in the `TSV` or 'CSV` format and they should be compatible with each other.   
 
 - **metadata file (required).**
 
-  The metadata file needs to contain two columns of information. The first column is the sample name that matches the expression profile, and the second column is the grouping information.
+ The metadata file contains at least two columns. The first column is the sample names, and the second column is the grouping information. Only two groups are supported at present, therefore, do not include more than two groups. 
+ 
+ Column names for a metadata should be `Name` and `Group`. 
+ 
+ See an example metadata file. 
+ 
 
-- **expression profile file (required).**
+- **expression matrix file (required).**
 
-  The expression profile should contain gene, sample and expression value information. The row represents the gene, and the column represents the sample, among which the first behavior sample name and the first column gene name.
+ The first column is the gene name and the column header should be `Name` and the rest columns are profiles for each cell or each sample. Each column header should be the sample name which appears in the metadata file.
+ 
+ See an example expression matrix file.
+ 
+Once the files are ready, you can carry out the DEG analysis with the default settings as follows. 
 
 ```julia
 julia> using RankCompV3
 # Use the default values for the following other parameters. If you want to modify the parameters, add them directly.
 julia> reoa("/public/yanj/data/fn_expr.txt",
 		"/public/yanj/data/fn_metadata.txt")
-# Specific parameter example
+```
+
+Other parameters can be set by passing the value to the corresponding keyword. 
+
+```julia
 julia> reoa("/public/yanj/data/fn_expr.txt",
-    	"/public/yanj/data/fn_metadata.txt";
+    	"/public/yanj/data/fn_metadata.txt",
     	expr_threshold = 0,
     	min_profiles = 0,
     	min_features = 0,
@@ -83,7 +96,9 @@ julia> reoa("/public/yanj/data/fn_expr.txt",
     	use_testdata = "no")
 ```
 
-### Parameters for details
+Below lists the optional keyword parameters and their default values.
+
+### Parameters
 
 | Parameter      | Parameter types | Default value       | Parameters to describe                                       |
 | -------------- | --------------- | ------------------- | ------------------------------------------------------------ |
