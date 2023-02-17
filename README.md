@@ -17,7 +17,7 @@ Pkg.add("RankCompV3")
 
 ```julia
 julia> using RankCompV3  # For details about how to download the RankCompV3 package, see 4.
-# Use the default parameters. Use the default values for the following other parameters. If you need to modify the parameters, add them directly.
+# Use the default values for the following other parameters. If you need to modify the parameters, add them directly.
 julia> result = reoa(use_testdata="yes")
 # The results are saved in the current directory. Including result file, ctrl and treat group expression profile file, as well as pval, padj, 3 x 3 associative table parameters, Δ1, Δ2, se, z1 distribution, etc
 julia> result
@@ -50,4 +50,48 @@ julia> result
 # Use the default values for the following other parameters. If you want to modify the parameters, add them directly.
 julia> reoa("/public/yanj/data/fn_expr.txt",
 		"/public/yanj/data/fn_metadata.txt")
+#Specific parameter example
+julia> reoa("expr.txt",
+    	"metadata.txt";
+    	expr_threshold = 0,
+    	min_profiles = 0,
+    	min_features = 0,
+    	pval_reo = 0.01,
+     	pval_deg = 1.00,
+     	padj_deg = 0.05,
+    	use_pseudobulk = 0,
+    	use_hk_genes = "yes"
+    	hk_file = "HK_genes_info.tsv",
+    	gene_name_type = "ENSEMBL",
+    	ref_gene_max = 3000,
+    	ref_gene_min = 100
+    	n_iter = 128,
+    	n_conv = 5,
+    	cell_drop_rate = 0,
+    	gene_drop_rate = 0,
+    	work_dir = "./",
+    	use_testdata = "no")
 ```
+
+### Parameters for details
+
+| Parameter      | Parameter types              | Default value     | Parameters to describe                                       |
+| -------------- | ---------------------------- | ----------------- | ------------------------------------------------------------ |
+| fn_expr        | AbstractString               | fn_expr.txt       | Gene expression profile file path. (required)                |
+| fn_metadata    | AbstractStringAbstractString | fn_metadata.txt   | Grouping information file path. (required)                   |
+| expr_threshold | NumberNumber                 | 0                 | Gene expression threshold.                                   |
+| min_profiles   | Int                          | 0                 | Include features (genes) detected in at least this many cells. |
+| min_features   | Int                          | 0                 | Include profiles (cells) where at least this many features are detected. |
+| pval_reo       | AbstractFloatAbstractFloat   | 0.01              | Stable threshold for p-value.                                |
+| pval_deg       | AbstractFloatAbstractFloat   | 0.05              | Significant  reversal threshold for p-value.                 |
+| padj_deg       | AbstractFloatAbstractFloat   | 0.05              | Significant reversal threshold for FDR  value.               |
+| use_pseudobulk | Int                          | 0                 | 0 for not using pseudobulk mode, 1 for automatic, 2~5 not used, 6~100 for number of pseudobulk profiles in each group. |
+| use_hk_genes   | AbstractString               | yes               | Whether to use the housekeeping gene, yes or no.             |
+| hk_file        | AbstractString               | HK_genes_info.tsv | Housekeeper gene  file path.                                 |
+| gene_name_type | AbstractString               | ENSEMBL           | Available choices: ENSEMBL, Symbol, ENTREZID ...             |
+| ref_gene_max   | Int                          | 3000              | If the number of available features is higher than this, take a random sample of this size. |
+| refinement     | Int                          | 100               | If the number is lower than this, ignore the house-keeping genes. |
+| n_iter         | Int                          | 128               | Max iterations.                                              |
+| n_conv         | Int                          | 5                 | Convergence condition: max. difference in the number of DEGs between two consective iterations |
+| work_dir       | AbstractString               | ./                | Working Directory.                                           |
+| use_testdata   | AbstractString               | no                | Whether to use the default provided test data for analysis, yes or no. |
