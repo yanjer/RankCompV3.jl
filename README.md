@@ -1,8 +1,10 @@
-## RankCompV3 
+# RankCompV3 
 
 RankCompV3 is a differential expression analysis algorithm based on relative expression ordering (REO) of gene pairs. It can be applied to bulk or single-cell RNA-sequencing (scRNA-seq) data, microarray gene expression profiles and proteomics profiles, etc. When applied in scRNA-seq data, it can run in single-cell mode or pseudo-bulk mode. The pseudo-bulk mode is expected to improve the accuracy while decreasing runntime and memory cost. 
 
-### Installation
+## 1 Used in the Julia language
+
+### 1.1 Installation
 
 The algorithm is implemented in Julia. Version 1.7 or later is recommended. The simpliest way to install is using the `Pkg` facility in Julia. 
 
@@ -11,9 +13,9 @@ using Pkg
 Pkg.add("RankCompV3")
 ```
 
-### Examples
+### 1.2 Examples
 
-#### Quick Start
+#### 1.2.1 Quick Start
 
 Run a test job with the input files distributed with the package.
 
@@ -43,9 +45,9 @@ julia> result
                                                                                                                                              19965 rows omitted, 19999×16
 ```
 
-#### Run your own DEG analysis
+#### 1.2.2 Run your own DEG analysis
 
-You need to prepare two input files before the analysis: metadata file and expression matrix. Both of them should be saved in the `TSV` or `CSV` format and they should be compatible with each other.   
+You need to prepare two input files before the analysis: metadata file and expression matrix. `.rds`, `.csv`, `.txt`, `.tsv` and `.RData` files are supported. 
 
 - **metadata file (required).**
 
@@ -84,7 +86,7 @@ julia> reoa("/public/yanj/data/fn_expr.txt",
     	pval_reo = 0.01,
      	pval_deg = 0.05,
      	padj_deg = 0.05,
-    	use_pseudobulk = 0,
+    	n_pseudo = 0,
     	use_hk_genes = "yes"
     	hk_file = "HK_genes_info.tsv",
     	gene_name_type = "ENSEMBL",
@@ -96,28 +98,28 @@ julia> reoa("/public/yanj/data/fn_expr.txt",
     	use_testdata = "no")
 ```
 
-#### Pseudobulk method
+#### 1.2.3 Pseudobulk method
 
 For scRNA-seq data, one can carry out a pseudobulk analysis. Rather than using the original single-cell profiles, pseudobulk profiles can be generated and used for DEG analysis. In this method, a random subset of cells from a group is aggregated into a pseudo-bulk profile. 
 
-The pseudobulk method can be turned on by setting `use_pseudobulk = 1`. 
+The pseudobulk method can be turned on by setting `n_pseudo > 0`. 
 
 ```julia
 julia> reoa("scRNA_expr.txt",
     	"scRNA_metadata.txt",
-    	use_pseudobulk = 1)
+    	n_pseudo = 1)
 ```
 
-By default, the analysis does not use the pseudobulk method (`use_pseudobulk = 0`).  If a value between `6` and `100` is passed to `use_pseudobulk`, that number of pseudobulk profiles will be generated and used for analysis. Other values (except `0` which turns off the pseudobulk method) will generate the default value (`10`) profiles. 
+By default, profiling does not use the pseudo-bulk method (`n_pseudo = 0`). 0 indicates that the pseudo-bulk mode is not used, and other values indicate the number of samples in each group after pseudo-bulk is combined.
 
 
-### Optional Parameters
+### 1.3 Optional Parameters
 
 Below lists the optional keyword parameters and their default values.
 
 | Parameter      | Parameter types | Default value       | Parameters to describe                                       |
 | -------------- | --------------- | ------------------- | ------------------------------------------------------------ |
-| fn_expr        | AbstractString  | "fn_expr.txt"       | Gene expression profile file path. (required)                |
+| fn_expr        | AbstractString  | "fn_expr.txt"       | Gene expression profile file path. (required).               |
 | fn_metadata    | AbstractString  | "fn_metadata.txt"   | Grouping information file path. (required)                   |
 | expr_threshold | Number          | 0                   | Gene expression threshold.                                   |
 | min_profiles   | Int             | 0                   | Include features (genes) detected in at least this many cells. |
@@ -125,7 +127,7 @@ Below lists the optional keyword parameters and their default values.
 | pval_reo       | AbstractFloat   | 0.01                | Stable threshold for p-value.                                |
 | pval_deg       | AbstractFloat   | 0.05                | Significant  reversal threshold for p-value.                 |
 | padj_deg       | AbstractFloat   | 0.05                | Significant reversal threshold for FDR  value.               |
-| use_pseudobulk | Int             | 0                   | 0 for not using pseudobulk mode, 1 for automatic, 2~5 not used, 6~100 for number of pseudobulk profiles in each group. |
+| n_pseudo       | Int             | 0                   | 0 indicates that the pseudo-bulk mode is not used, and other values indicate the number of samples in each group after pseudo-bulk is combined. |
 | use_hk_genes   | AbstractString  | "yes"               | Whether to use the housekeeping gene, yes or no.             |
 | hk_file        | AbstractString  | "HK_genes_info.tsv" | House-keeping genes  file path.                              |
 | gene_name_type | AbstractString  | "ENSEMBL"           | Available choices: Name, REFSEQ, SYMBOL, ENTREZID, ENSEMBL, UNIGENE and GENENAME. |
@@ -136,7 +138,9 @@ Below lists the optional keyword parameters and their default values.
 | work_dir       | AbstractString  | "./"                | Working Directory.                                           |
 | use_testdata   | AbstractString  | "no"                | Whether to use the default provided test data for analysis, yes or no. |
 
-#### Example output file: 
+### 1.4 Example output file
+
+#### 1.4.1 result
 
 - The expression profile of the ctrl group (after preprocessing).  (See [fn_metadata.txt](https://github.com/yanjer/RankCompV3.jl/blob/master/test/fn_metadata.txt))
 
@@ -163,43 +167,43 @@ Below lists the optional keyword parameters and their default values.
 - Heat map of the expression values of DEGs in the ctrl and treat groups.  (See [fn_expr_degs_expr_heat.pdf](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_degs_expr_heat.pdf))
 
 
-##### log file
+#### 1.4.2 log file
 
 - [RankCompV3-test-data-output.log](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/RankCompV3_test_data_output.log)
 
-### Used in the R language
+## 2 Used in the R language
 
-### Installation
+### 2.1 Installation
 
-##### You can install just like any other R packages by `JuliaCall`
+##### 2.1.1 You can install just like any other R packages by `JuliaCall`
 
 ```R
 install.packages("JuliaCall")
 ```
 
-##### To use you must have a working installation of Julia. This can be easily done via: `JuliaCall`
+##### 2.1.2 To use you must have a working installation of Julia. This can be easily done via: `JuliaCall`
 
 ```R
 library(JuliaCall)
 install_julia()
 ```
 
-##### which will automatically install and setup a version of Julia specifically for use with `JuliaCall`. Or you can do
+##### 2.1.3 which will automatically install and setup a version of Julia specifically for use with `JuliaCall`. Or you can do
 
 ```R
 library(JuliaCall)
 julia <-julia_setup()
 ```
 
-##### Download RankCompV3
+##### 2.1.4 Download RankCompV3
 
 ```julia
 julia_install_package_if_needed("RankCompV3")
 ```
 
-### Examples
+### 2.2 Examples
 
-#### Quick Start
+#### 2.2.1 Quick Start
 
 Run a test job with the input files distributed with the package.
 
@@ -279,9 +283,9 @@ Julia Object of type Tuple{DataFrames.DataFrame, DataFrames.DataFrame, DataFrame
                                                  19984 rows omitted)
 ```
 
-#### Run your own DEG analysis
+#### 2.2.2 Run your own DEG analysis
 
-You need to prepare two input files before the analysis: metadata file and expression matrix. Both of them should be saved in the `TSV` or `CSV` format and they should be compatible with each other.   
+You need to prepare two input files before the analysis: metadata file and expression matrix. You need to prepare two input files before the analysis: metadata file and expression matrix. `.rds`, `.csv`, `.txt`, `.tsv` and `.RData` files are supported.    
 
 - **metadata file (required).**
 
@@ -320,7 +324,7 @@ julia_do.call("reoa",list("/public/yanj/data/fn_expr.txt",
     	pval_reo = 0.01,
      	pval_deg = 0.05,
      	padj_deg = 0.05,
-    	use_pseudobulk = 0,
+    	n_pseudo = 0,
     	use_hk_genes = "yes"
     	hk_file = "HK_genes_info.tsv",
     	gene_name_type = "ENSEMBL",
@@ -332,73 +336,134 @@ julia_do.call("reoa",list("/public/yanj/data/fn_expr.txt",
     	use_testdata = "no"),need_return="Julia",show_value=FALSE)
 ```
 
-#### Pseudobulk method
+#### 2.2.3 Pseudobulk method
 
 For scRNA-seq data, one can carry out a pseudobulk analysis. Rather than using the original single-cell profiles, pseudobulk profiles can be generated and used for DEG analysis. In this method, a random subset of cells from a group is aggregated into a pseudo-bulk profile. 
 
-The pseudobulk method can be turned on by setting `use_pseudobulk = 1`. 
+The pseudobulk method can be turned on by setting `n_pseudo = 1`. 
 
 ```R
 julia_do.call("reoa",list("scRNA_expr.txt",
 						"scRNA_metadata.txt",
-        				use_pseudobulk = 1),need_return="Julia",show_value=FALSE)
+        				n_pseudo = 1),need_return="Julia",show_value=FALSE)
 ```
 
-By default, the analysis does not use the pseudobulk method (`use_pseudobulk = 0`).  If a value between `6` and `100` is passed to `use_pseudobulk`, that number of pseudobulk profiles will be generated and used for analysis. Other values (except `0` which turns off the pseudobulk method) will generate the default value (`10`) profiles. 
+By default, profiling does not use the pseudo-bulk method (`n_pseudo = 0`). 0 indicates that the pseudo-bulk mode is not used, and other values indicate the number of samples in each group after pseudo-bulk is combined.
 
 
-### Optional Parameters
+### 2.3 Optional Parameters
 
-Below lists the optional keyword parameters and their default values.
+See 1.3 Optional Parameters.
 
-| Parameter      | Parameter types | Default value       | Parameters to describe                                       |
-| -------------- | --------------- | ------------------- | ------------------------------------------------------------ |
-| fn_expr        | AbstractString  | "fn_expr.txt"       | Gene expression profile file path. (required)                |
-| fn_metadata    | AbstractString  | "fn_metadata.txt"   | Grouping information file path. (required)                   |
-| expr_threshold | Number          | 0                   | Gene expression threshold.                                   |
-| min_profiles   | Int             | 0                   | Include features (genes) detected in at least this many cells. |
-| min_features   | Int             | 0                   | Include profiles (cells) where at least this many features are detected. |
-| pval_reo       | AbstractFloat   | 0.01                | Stable threshold for p-value.                                |
-| pval_deg       | AbstractFloat   | 0.05                | Significant  reversal threshold for p-value.                 |
-| padj_deg       | AbstractFloat   | 0.05                | Significant reversal threshold for FDR  value.               |
-| use_pseudobulk | Int             | 0                   | 0 for not using pseudobulk mode, 1 for automatic, 2~5 not used, 6~100 for number of pseudobulk profiles in each group. |
-| use_hk_genes   | AbstractString  | "yes"               | Whether to use the housekeeping gene, yes or no.             |
-| hk_file        | AbstractString  | "HK_genes_info.tsv" | House-keeping genes  file path.                              |
-| gene_name_type | AbstractString  | "ENSEMBL"           | Available choices: Name, REFSEQ, SYMBOL, ENTREZID, ENSEMBL, UNIGENE and GENENAME. |
-| ref_gene_max   | Int             | 3000                | If the number of available features is higher than this, take a random sample of this size. |
-| ref_gene_min   | Int             | 100                 | If the number is lower than this, ignore the house-keeping genes. |
-| n_iter         | Int             | 128                 | Max iterations.                                              |
-| n_conv         | Int             | 5                   | Convergence condition: max. difference in the number of DEGs between two consective iterations. |
-| work_dir       | AbstractString  | "./"                | Working Directory.                                           |
-| use_testdata   | AbstractString  | "no"                | Whether to use the default provided test data for analysis, yes or no. |
+### 2.4 Example output file
 
-#### Example output file: 
+See 1.4 Example output file.
 
-- The expression profile of the ctrl group (after preprocessing).  (See [fn_metadata.txt](https://github.com/yanjer/RankCompV3.jl/blob/master/test/fn_metadata.txt))
+## 3 Specific experimental designs
 
-- The expression profile of the treat group (after preprocessing).  (See [fn_expr_treat.tsv](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_treat.tsv))
+In this chapter, we will present some examples of the use of experimental designs.
 
-- This file contains Name, pval, padj, n11, n12, n13, n21, n22, n23, n31, n32, n33, Δ1, Δ2, se, z1.  (See [fn_expr_result.tsv](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_result.tsv))
+### 3.1 Datasets from different sources
 
-- Graph of Distribution of Expression Values.  (See [fn_expr_expr_dist.pdf](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_expr_dist.pdf))
+Differential expression analysis often involves datasets from different sources, such as different sequencing platforms, different sample sources, or different sample processing methods. RankCompV3 supports direct column concatenation of expression profiles for integrated analysis of different datasets.
 
-- Heat maps of expression values for the ctrl and treat groups.  (See [fn_expr_expr_heat.pdf](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_expr_heat.pdf))
+```julia
+julia> expr
+5×11 DataFrame
+ Row │ gene_name  s1     s2     s3     c1     c8     c6     a1     a2     b1     b6
+     │ String7    Int64  Int64  Int64  Int64  Int64  Int64  Int64  Int64  Int64  Int64
+─────┼─────────────────────────────────────────────────────────────────────────────────
+   1 │ DE1           10     53     18     84     18    200    180    176     26     24
+   2 │ DE2            5     22     59     11     33     26     37     36     40     79
+   3 │ DE3           62     39     18     19      8    157     81     89    220     97
+   4 │ DE4            6    116    131      3     49     15    205     63     75    228
+   5 │ DE5           28     31     27     58     16    505     92    119    157    261
+```
 
-- Distribution of parameters in 3 x 3 contingency tables.  (See [fn_expr_contigency_table.pdf](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_contigency_table.pdf))
+Among them, s, c, a and b samples are data from different sources. Samples s and c are in the same group, and samples a and b are in the same group.
 
-- Delta distribution.  (See [fn_expr_delta_value.pdf](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_delta_value.pdf))
+```julia
+julia> meta
+10×2 DataFrame
+ Row │ sample_name  group
+     │ String15     String7
+─────┼──────────────────────
+   1 │ s1           group1
+   2 │ s2           group1
+   3 │ s3           group1
+   4 │ c1           group1
+   5 │ c8           group1
+   6 │ c6           group1
+   7 │ a1           group2
+   8 │ a2           group2
+   9 │ b1           group2
+  10 │ b6           group2
+```
 
-- Distribution of Standard Error (SE).  (See [fn_expr_se.pdf](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_se.pdf))
+### 3.2 Two or more groups
 
-- Distribution of z1.  (See [fn_expr_z1.pdf](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_z1.pdf))
+When multiple cell types are included, the characteristics of each cell class need to be analyzed and each cell class compared to the rest. Suppose there are three types of cells, such as cell types s, c, a, and b.
 
-- Distribution of p and FDR values.  (See [fn_expr_p_value.pdf](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_p_value.pdf))
+```julia
+julia> meta
+10×2 DataFrame
+ Row │ sample_name  group
+     │ String       String
+─────┼────────────────────────
+   1 │ s1           celltype1
+   2 │ s2           celltype1
+   3 │ s3           celltype1
+   4 │ c1           celltype2
+   5 │ c8           celltype2
+   6 │ c6           celltype2
+   7 │ a1           celltype3
+   8 │ a2           celltype3
+   9 │ b1           celltype4
+  10 │ b6           celltype4
+```
 
-- Distribution of expression values for DEGs.  (See [fn_expr_degs_expr_dist.pdf](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_degs_expr_dist.pdf))
+By default, conditions are listed in order of precedence.
 
-- Heat map of the expression values of DEGs in the ctrl and treat groups.  (See [fn_expr_degs_expr_heat.pdf](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/fn_expr_degs_expr_heat.pdf))
+```julia
+julia> unique(meta.group)
+4-element Vector{String}:
+ "celltype1"
+ "celltype2"
+ "celltype3"
+ "celltype4"
+```
+
+### 3.3 Combined sample
+
+For analyzing single-cell data, drop-out phenomenon often exists. The `n_pseudo` parameter of pseudobulk mode of RankCompV3 can be used to combine different cells to reduce the effect of drop-out.
+
+```julia
+julia> reoa("/public/yanj/data/fn_expr.txt",
+    	"/public/yanj/data/fn_meta.txt",
+    	n_pseudo = 10)
+```
+
+By default, profiling does not use the pseudo-bulk method (`n_pseudo = 0`). 0 indicates that the pseudo-bulk mode is not used, and other values indicate the number of samples in each group after pseudo-bulk is combined.
 
 
-##### log file
 
-- [RankCompV3-test-data-output.log](https://github.com/yanjer/RankCompV3-test-data-output/blob/master/RankCompV3-test-data-output/RankCompV3_test_data_output.log)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

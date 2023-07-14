@@ -15,6 +15,7 @@ using HypothesisTests
 using Distributions
 using Random
 using LinearAlgebra
+using FileIO
 
 
 export 
@@ -50,6 +51,22 @@ julia> opt  # mutated by Flux.train!
 (weight = Leaf(Momentum{Float64}(0.1, 0.9), Float32[-2.018 3.027]), bias = Leaf(Momentum{Float64}(0.1, 0.9), Float32[-10.09]), σ = ())
 ```
 """
+
+
+# pseudobulk
+function pseudobulk_group(group_expr::DataFrame,
+							n_pseudo::Int64,
+							g_name::String7)
+	r_group, c_group = size(group_expr )
+	cp_group  = ceil(Int,  c_group/n_pseudo)
+	cp_group > 1 || @info "WARN: too few profiles to generate $n_pseudo pseudo-bulk profiles for the 'group' group"
+	it_group  = collect(Iterators.partition(sample(1:c_group, c_group, replace = false), cp_group)) # Random-shuffle, then partition
+	group_expr  = reduce(hcat, [sum.(eachrow( group_expr[:, i])) for i in it_group ]) # Matrix r_group x n_pseudo
+	group_expr  = DataFrame(group_expr,  :auto)
+	rename!(group_expr,string.(g_name,"_",names(group_expr)))
+	return group_expr
+end
+
 
 
 #   If two genes have the same expression value,
@@ -318,51 +335,108 @@ Calculate P values for each gene, then add the non-DEGs to the reference list
 
 3) If the number of ref_gene remains the same as the previous list, the iteration stops and returns. 
 """
-function identify_degs(df_ctrl,
-       df_treat,
-      gene_names::Vector{String},
-          t_ctrl::Int64,   # Threshold for significantlly stable REOs
-         t_treat::Int64,
+
+# Group-specific DEGs
+function identify_degs(
+		    data::AbstractMatrix,
+           group::AbstractVector, # Group information for each column in data
+      gene_names::AbstractVector,
+      # threshold::AbstractMatrix,   # Threshold for each group, 2xg
+	    pval_reo::AbstractFloat,
         pval_deg::AbstractFloat,  # P-value threshold for DEGs
         padj_deg::AbstractFloat,  # FDR threshold for DEGs
-	ref_gene_vec::BitVector, 
-	      i_iter::Int64,
+	    ref_gene::BitVector, 
           n_iter::Int64,        # Threshold for iterations
 	  	  n_conv::Int64         # Threshold for convergence
 	)
-    @time result = compare_reos(
-				  Matrix( df_ctrl),
-				  Matrix(df_treat),
-				  Int32(t_ctrl),
-				  Int32(t_treat),
-				  ref_gene_vec
-				  )
-	@info "INFO: Iteration $i_iter is complete."
-	# non-DEGs
-	padj = result[:, 2]
-	inds = padj .> padj_deg 
-	@info "INFO: iteration $i_iter,  # DEGs $(length(inds) - sum(inds)), # non-DEGs $(sum(inds))"
-	if abs(sum(ref_gene_vec) - sum(inds)) < n_conv || i_iter >= n_iter
-		"Either the convergence threshold is reached or the max iteration is exceeded."
-        return result
-    else
-		ref_gene_vec = inds # possible bug?
-        i_iter += 1
-        return identify_degs(df_ctrl,
-        df_treat,
-      gene_names,
-          t_ctrl,
-         t_treat,
-        pval_deg,
-        padj_deg,
-    ref_gene_vec,
-         i_iter,
-		 n_iter,
-		 n_conv
-	     )
-    end
+	r, c = size(data)
+	glen = length(group)
+	glev = unique(group)   # Unique group levels
+	gnum = length(glev)
+	c == glen|| throw(DimensionMismatch("'data' and 'group' do not have compatiable sizes"))
+	gnum > 1 || throw(DimensionMismatch("Only 1 level in 'group1, at least 2 levels!"))
+	gind = [group .== i for i in glev]
+	gsi1 = sum.(gind)
+	gsi2 = c .- gsi1
+	#TODO
+	# threshold = ceil.(Int32, hcat(gsi1*0.9, gsi2*0.7)')
+    threshold = get_major_reo_lower_count.(Matrix(hcat(gsi1,gsi2)') , pval_reo)
+	R = falses(r*r, 9, gnum) # BitMatrix, 0 (false) or 1 (true), for each group
+	@info "INFO: Number of execution threads: $(Threads.nthreads())"
+	@info "INFO: Start constructing REO table"
+	for i=1:r - 1
+		i%100 == 0 && print(".")
+		Threads.@threads for j=i+1:r
+			# REO     1     2    3
+			#  Ctrl: i<j  i~j  i>j
+			#  Treat i<j  i~j  i>j
+			local reo = broadcast(is_greater,  data[i,:],  data[j,:])
+			local nre = [sum(reo[gind[k]]) for k in 1:gnum]
+			local not = sum(nre) .- nre
+			for k=1:gnum
+				local ic = nre[k] >= threshold[1, k] ? 3 : ((gsi1[k] - nre[k]) >= threshold[1, k] ? 1 : 2)
+				local it = not[k] >= threshold[2, k] ? 3 : ((gsi2[k] - not[k]) >= threshold[2, k] ? 1 : 2)
+				#     i<j  i~j  i>j
+				# i<j n11  n12  n13
+				# i~j n21  n22  n23
+				# i>j n31  n32  n33
+				# R
+				#  1    2    3   4    5    6   7    8    9
+				# n11  n12  n13 n21  n22  n23 n31  n32  n33
+				R[(i-1)*r+j, 3*(ic - 1) + it , k] = 1 # for gene i 
+				R[(j-1)*r+i, 3*(3-ic) + (4-it), k] = 1# for gene j
+				if gnum == 2
+					break
+				end
+			end
+		end
+	end
+	@info "\nINFO: Start identifying DEGs"
+	res  = gene_names
+	# outerloop for each group
+	for k=1:gnum
+		i_iter = 0
+		result = zeros(Float64, r, 15) #10 +5 for McCullagph_test, +3 for McNemar_exact_test, +2 for McNemar_Bowker_test and McNemar_test
+		ref_gene_vec = ref_gene
+		while i_iter < n_iter
+			# Construct contigency table For each gene
+			Threads.@threads for i in 1:r
+				local cont = sum(R[(((i-1)*r+1):(i*r))[ref_gene_vec], :, k], dims = 1)
+				local pval, stat... = McCullagh_test(Matrix(reshape(cont, 3, 3)'))
+				result[i, :] = [pval 1 cont... stat...]
+				i%1000 == 0 && print(".")
+			end
+			print("\n")
+			Δ = sort(result[:,12])
+			# Filter out 10% most deviated  Δs before estimating the standard deviation
+			se= std(Δ[round(Int, r*0.05) : round(Int, r*0.95) ])
+			pval = pvalue.(Normal(0, se), result[:,12], tail=:both)
+			padj = adjust(pval, BenjaminiHochberg())
+			# padj = adjust(result[:,1], BenjaminiHochberg())
+			result[:, 1] = pval
+			result[:, 2] = padj
+			inds = padj .> padj_deg 
+			@info "INFO: iteration $i_iter,  # DEGs $(length(inds) - sum(inds)), # non-DEGs $(sum(inds))"
+			if (abs(sum(ref_gene_vec) - sum(inds)) < n_conv) || (sum(inds) == 0) || (sum(padj .<= padj_deg) == 0)
+				@info "INFO: Convergence threshold is reached"
+				break
+			end
+			i_iter += 1
+			ref_gene_vec = inds
+		end
+		gene_up_down = copy(gene_names)
+		gene_up_down[result[:,15] .> 0] .= "up"
+		gene_up_down[result[:,15] .< 0] .= "down"
+		gene_up_down[result[:,15] .== 0] .= "no change"
+		res = hcat(res, result, gene_up_down)
+		if gnum==2
+			@info "INFO: The results of differentially expressed genes in the iteration process of $(glev[1]) vs $(glev[2]) were output."
+			break
+		end
+		@info "INFO: The results of differentially expressed genes in the iteration process of $(glev[k]) vs other were output."
+	end
+	return res
 end
-
 
 """
     reoa(fn_expr::AbstractString = "fn_expr.txt",
@@ -389,7 +463,7 @@ The first return value is a DataFrame, where rows are genes and columns are stat
 ```jldoctest
 julia> result
 (19999×16 DataFrame
-   Row │ Name     pval         padj        n11      n12      n13      n21      n22      n23      n31      n32      n33      Δ1           Δ2          se         z1
+   Row │ Name     pval         padj        n11      n21      n31      n12      n22      n32      n13      n23      n33      Δ1           Δ2          se         z1
        │ String   Float64      Float64     Float64  Float64  Float64  Float64  Float64  Float64  Float64  Float64  Float64  Float64      Float64     Float64    Float64
 ───────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
      1 │ DE1      0.23566      0.716036     1532.0     75.0      0.0   1220.0  11010.0    602.0     16.0   2933.0   1674.0   1.91208      1.81954    0.0393608    48.5783
@@ -462,7 +536,7 @@ function reoa(
           pval_reo::AbstractFloat = 0.01,
           pval_deg::AbstractFloat = 0.05,
           padj_deg::AbstractFloat = 0.05,
-	use_pseudobulk::Int = 0, # 0 for not using pseudobulk mode, 1 for automatic, 2~5 not used, 6~100 for number of pseudobulk profiles in each group
+		  n_pseudo::Int = 0, # 0 for not using pseudobulk mode, Other values indicate the number of samples that are combined after each pseudobulk.
       use_hk_genes::AbstractString = "yes",
            hk_file::AbstractString = "$(joinpath(@__DIR__, "..", "hk_gene_file", "HK_genes_info.tsv"))",
     gene_name_type::AbstractString = "ENSEMBL", # Available choices: ENSEMBL, Symbol, ENTREZID ...
@@ -485,12 +559,11 @@ function reoa(
 	isfile(fn_expr) && isfile(fn_meta)             || throw(ArgumentError("$fn_expr, or $fn_meta, does not exist or is not a regular file."))
 	filesize(fn_expr) > 0 && filesize(fn_meta) > 0 || throw(ArgumentError("$fn_expr, or $fn_meta, has size 0."))
     fn_stem, = splitext(basename(fn_expr))   #filename stem
-	
 	# Read in expression matrix
-    meta = CSV.read(fn_meta, DataFrame)
-    expr = CSV.read(fn_expr, DataFrame)
-    mr,mc= size(meta)
-    r,c  = size(expr)
+    expr = occursin(".rds",fn_expr) ? DataFrame(load(fn_expr),:auto) : (occursin(".RData",fn_expr) ? DataFrame(get(load(fn_expr),fn_stem,1),:auto) : CSV.read(fn_expr, DataFrame))
+    meta = occursin(".rds",fn_meta) ? DataFrame(load(fn_meta),:auto) : (occursin(".RData",fn_meta) ? DataFrame(get(load(fn_meta),splitext(basename(fn_meta))[1],1),:auto) : CSV.read(fn_meta, DataFrame))
+	mr,mc= size(meta)
+    # r,c  = size(expr)
 	# Check the compatability between meta data and expression matrix
 	mc >= 2 || throw(ArgumentError("$fn_meta the file for meta data, has only 0 or 1 column."))
 	if !(["Name" "Group"] ⊆ names(meta)) && (meta[:,1] ⊆ names(expr))
@@ -501,18 +574,16 @@ function reoa(
 	if !(["Name" "Group"] ⊆ names(meta)) || !(meta.Name ⊆ names(expr))
 		throw(ArgumentError("Meta data file, $fn_meta, does not fit with the expression file, $fn_expr. Some sample names in the meta are not found in the column names of the expression matrix"))
 	end
+	if size(unique(names(expr)))[1] .!= size(names(expr))[1]
+		throw(ArgumentError("Duplicate column names exist in the representation matrix."))
+	end
 	meta.Group = categorical(meta.Group)
-	mg         = length(levels(meta.Group))
+	g_name = unique(meta.Group)
+	mg         = length(g_name)
 	if mg < 2
 		throw(ArgumentError("Meta data file, $fn_meta has only 0 or 1 group. It must consist of two 'Group' levels"))
 	end
-	if mg > 2
-		@info "WARN: Meta data have more than 2 group levels. The comparsion is only performed between the first two: $(levels(meta.Group)[1:2])"
-	end
-	g_ctrl, g_treat = levels(meta.Group)[1:2]
-	names_ctrl      = meta.Name[meta.Group .== g_ctrl ] # Sample names for 'ctrl' group
-	names_treat     = meta.Name[meta.Group .== g_treat] # Sample names for 'treat' group
-	@info "INFO: Comparsion is peformed between $g_ctrl and $g_treat"
+	@info "INFO: According to the meta information, there are $mg groups of data and each group will be analyzed with the rest of the sample."
 	# if expr has no column named 'Name', we check if the first column is not a data column (the column name appears in meta.Name)
 	# then we consider the first column as the gene names 
 	if !(["Name"] ⊆ names(expr)) && !(names(expr, 1) ⊆ meta.Name)
@@ -521,44 +592,34 @@ function reoa(
 	end
 	# Remove the rows with missing data
 	# Columns with Number datatype are assumed to be the expression profiles
-	data_names = names(dropmissing!(expr), Number)       
-	if !(names_ctrl  ⊆ data_names) || !(names_treat ⊆ data_names)
+	data_names = names(dropmissing!(expr), Number)
+	if !(meta.Name ⊆ data_names)
 		throw(ArgumentError("$fn_expr expression matrix contains non-numeric (Number) profiles."))
 	end
     gene_names = convert(Vector{String},expr.Name)
-	df_ctrl    = expr[:, names_ctrl ] 
-	df_treat   = expr[:, names_treat] 
-	r_ctrl, c_ctrl = size(df_ctrl )
-	r_treat,c_treat= size(df_treat)
-	if (r_ctrl > 500) || (r_treat > 500)
-		use_pseudobulk = 100
-	end
-	@info "INFO: size of the loaded expression matrix for the two groups, $r_ctrl x $c_ctrl vs $c_treat"
-
 	# Generate pseudo-bulk profiles
-	n_pseudo = (use_pseudobulk == 1) ? 10 : (use_pseudobulk ∈ 6:100 ? use_pseudobulk : 0)
 	if n_pseudo > 0
-		cp_ctrl  = ceil(Int,  c_ctrl/n_pseudo) 
-		cp_treat = ceil(Int, c_treat/n_pseudo)
-		cp_ctrl > 1 || @info "WARN: too few profiles to generate $n_pseudo pseudo-bulk profiles for the 'ctrl' group"
-		cp_treat> 1 || @info "WARN: too few profiles to generate $n_pseudo pseudo-bulk profiles for the 'treat' group"
-		it_ctrl  = collect(Iterators.partition(sample(1:c_ctrl, c_ctrl, replace = false), cp_ctrl)) # Random-shuffle, then partition
-		it_treat = collect(Iterators.partition(sample(1:c_treat,c_treat,replace = false),cp_treat))
-		df_ctrl  = reduce(hcat, [sum.(eachrow( df_ctrl[:, i])) for i in it_ctrl ]) # Matrix r_ctrl x n_pseudo
-		df_treat = reduce(hcat, [sum.(eachrow(df_treat[:, i])) for i in it_treat]) 
-		df_ctrl  = DataFrame(df_ctrl,  :auto)
-		df_treat = DataFrame(df_treat, :auto)
+		df_expr = reduce(hcat, [pseudobulk_group(expr[:, meta.Name[meta.Group .== g_name[i]]], n_pseudo, g_name[i]) for i in 1:mg ])
+		meta_group = DataFrame()
+		insertcols!(meta_group,   1, :Name => names(df_expr))
+		insertcols!(meta_group,   2, :Group => reduce(hcat,split.(names(df_expr),"_"))[1,:])
+	else
+		df_expr = expr[:,2:end]
+		meta_group = meta
 	end
-
-	# Filter low-expressed genes and cells
-	df_ctrl    = df_ctrl[:, sum.(eachcol( df_ctrl .> 0)) .> min_profiles]
-	df_treat   = df_treat[:, sum.(eachcol(df_treat .> 0)) .> min_profiles]
-	inds       = (sum.(eachrow(df_ctrl .> 0)) .+ sum.(eachrow(df_treat .> 0))) .> min_features
+	# Filter low-expressed cells
+	s_inds = (sum.(eachcol(df_expr .> 0)) .> min_profiles)
+	s_del = sum(.!s_inds)
+	if s_del > 0
+		for i in 1:s_del
+			meta_group = meta_group[.!(meta_group[:,1] .== names(df_expr)[.!s_inds][i]),:]
+		end
+	end
+	df_expr    = df_expr[:, s_inds]
+	inds       = ((sum.(eachrow(df_expr .> 0))) .> min_features)
 	gene_names = gene_names[inds]
-	df_ctrl    =  df_ctrl[inds, :]
-	df_treat   = df_treat[inds, :]
-	@info "INFO: size after filtering lowly expressed genes and profiles and pseudo-bulk sampling, $(size(df_ctrl)) vs. $(size(df_treat))"
-
+	df_expr    =  df_expr[inds, :]
+	@info "INFO: size after filtering lowly expressed genes and profiles and pseudo-bulk sampling, $(size(df_expr))"
 	# Process the house-keeping genes
     if gene_name_type == "ENTREZID"
         gene_names = convert(Vector{String}, gene_names)
@@ -580,44 +641,52 @@ function reoa(
 			end
 		end
 	end
-	r_ctrl, c_ctrl = size(df_ctrl )
-	r_treat,c_treat= size(df_treat)
-    t_ctrl  = get_major_reo_lower_count(c_ctrl , pval_reo)
-    t_treat = get_major_reo_lower_count(c_treat, pval_reo)
 	ref_gene_vec = convert(BitVector, [i ∈ ref_gene for i in gene_names])
-	@info "Minimum size for significantly stable REO in the control group: $t_ctrl"       
-	@info "Minimum size for significantly stable REO in the treatment group: $t_treat"
-    result = identify_degs(df_ctrl,
-        df_treat,
-        gene_names,
-        t_ctrl,
-        t_treat,
-        pval_deg,
-        padj_deg,
-        ref_gene_vec,
-		0,
-		n_iter,
-		n_conv
-        )
+	@time result = identify_degs(Matrix(df_expr),
+								meta_group.Group, # Group information for each column in data
+								gene_names,
+								# threshold::AbstractMatrix,   # Threshold for each group, 2xg
+								pval_reo,
+								pval_deg,  # P-value threshold for DEGs
+								padj_deg,  # FDR threshold for DEGs
+								ref_gene_vec, 
+								n_iter,        # Threshold for iterations
+								n_conv         # Threshold for convergence
+						)
 	# Beautify output
 	# McCullagh_test result header
-	header = [:pval, :padj, :n11, :n12, :n13, :n21, :n22, :n23, :n31, :n32, :n33, :Δ1, :Δ2, :se, :z1]
-	# # McNemar's exact test
-	# header = [:pval, :padj, :n11, :n12, :n13, :n21, :n22, :n23, :n31, :n32, :n33, :N, :n]
-	# # other tests
-	# header = [:pval, :padj, :n11, :n12, :n13, :n21, :n22, :n23, :n31, :n32, :n33, :stat]
-	result = DataFrame(result, header)
-	result[:, 3:11] = Int64.(result[:, 3:11])
-	insertcols!(result,   1, :Name => gene_names)
-	insertcols!(df_ctrl,  1, :Name => gene_names)
-	insertcols!(df_treat, 1, :Name => gene_names)
-	CSV.write(join([fn_stem, "result.tsv"], "_"), result,  delim = '\t')
-	CSV.write(join([fn_stem,   "ctrl.tsv"], "_"), df_ctrl, delim = '\t')
-	CSV.write(join([fn_stem,  "treat.tsv"], "_"), df_treat,delim = '\t')
-	plot_result(result, fn_stem)
-	plot_heatmap(df_ctrl, df_treat, fn_stem, log1p = true)
-	plot_heatmap(df_ctrl[.!ref_gene_vec,:], df_treat[.!ref_gene_vec,:], join([fn_stem, "degs"], "_"), log1p = true)
-    return result, df_ctrl, df_treat
+	header = [:pval, :padj, :n11, :n21, :n31, :n12, :n22, :n32, :n13, :n23, :n33, :Δ1, :Δ2, :se, :z1, :up_down]
+	for i in 1:mg
+		g_sit = (meta_group.Group .== g_name[i])
+		outcome_result = DataFrame(result[:,(2 + 16*(i - 1)):(1 + 16*i)],header)
+		insertcols!(outcome_result,   1, :genename => result[:,1])
+		(mg == 2) ? fg_name = join([g_name[1],g_name[2]],"_") : fg_name = g_name[i]
+		CSV.write(join([fn_stem,fg_name,"result.tsv"], "_"), outcome_result,  delim = '\t')
+		plot_result(outcome_result, join([fn_stem,fg_name], "_"))
+		plot_heatmap(df_expr[:,g_sit], df_expr[:,.!g_sit], join([fn_stem,fg_name], "_"), log1p = true)
+		plot_heatmap(df_expr[(outcome_result.padj .<= padj_deg),g_sit], df_expr[(outcome_result.padj .<= padj_deg),.!g_sit], join([fn_stem, fg_name, "degs"], "_"), log1p = true)
+		(mg == 2) ? break : continue
+	end
+	insertcols!(df_expr,   1, :genename => result[:,1])
+	CSV.write(join([fn_stem, "df_expr.tsv"], "_"), df_expr, delim = '\t')
+	CSV.write(join([fn_stem, "df_meta.tsv"], "_"), meta_group, delim = '\t')
+	@info "INFO: The expression profile and metadata file after pseudobulk are $(join([fn_stem, "df_expr.tsv"], "_")) and $(join([fn_stem, "df_meta.tsv"], "_"))"
+	gene_up_down = DataFrame(hcat(gene_names, reduce(hcat, [result[:,i*16 + 1] for i in 1:fld(size(result)[2],16)])),:auto)
+	CSV.write(join([fn_stem, "gene_up_down.tsv"], "_"), rename!(gene_up_down,((mg == 2) ? ["gene_name", string(g_name[1], "_vs_", g_name[2])] : ["gene_name"; string.(g_name, "_vs_other")])), delim = '\t')
+	# for i in 1:mg
+	# 	g_sit = (meta_group.Group .== g_name[i])
+	# 	outcome_result = DataFrame(result[:,(2 + 16*(i - 1)):(1 + 16*i)],header)
+	# 	insertcols!(outcome_result,   1, :genename => result[:,1])
+	# 	inds = ((sum.(eachrow(df_expr[:,g_sit])) .> min_features) .&& (sum.(eachrow(df_expr[:,.!g_sit])) .> min_features))
+	# 	outcome_result = outcome_result[inds,:]
+	# 	df_expr = df_expr[inds,:]
+	# 	gene_names = gene_names[inds,:]
+	# 	CSV.write(join([fn_stem,g_name[i],"result.tsv"], "_"), outcome_result,  delim = '\t')
+	# 	plot_result(outcome_result, join([fn_stem,g_name[i]], "_"))
+	# 	plot_heatmap(df_expr[:,[1,g_sit]], df_expr[:,.!g_sit], join([fn_stem,g_name[i]], "_"), log1p = true)
+	# 	plot_heatmap(df_expr[(outcome_result.padj .<= padj_deg),g_sit], df_expr[(outcome_result.padj .<= padj_deg),.!g_sit], join([fn_stem, g_name[i], "degs"], "_"), log1p = true)
+	# end
+    return "RankCompV3 analysis complete."
 end
 
 end # module
