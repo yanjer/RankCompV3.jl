@@ -416,7 +416,7 @@ function identify_degs(
 			result[:, 2] = padj
 			inds = .!((pval .<= pval_deg) .&& (padj .<= padj_deg))
 			@info "INFO: iteration $i_iter,  # DEGs $(length(inds) - sum(inds)), # non-DEGs $(sum(inds))"
-			if (abs(sum(ref_gene_vec) - sum(inds)) < n_conv) || (((sum(inds) == 0) || (sum(.!inds) == 0)) && sum(ref_gene_vec) == r)
+			if (abs(sum(ref_gene_vec) - sum(inds)) < n_conv)
 				@info "INFO: Convergence threshold is reached"
 				break
 			end
@@ -641,7 +641,6 @@ function reoa(
 		end
 	end
 	ref_gene_vec = convert(BitVector, [i ∈ ref_gene for i in gene_names])
-	println("算法star")
 	@time result = identify_degs(Matrix(df_expr),
 								meta_group.Group, # Group information for each column in data
 								gene_names,
@@ -653,7 +652,6 @@ function reoa(
 								n_iter,        # Threshold for iterations
 								n_conv         # Threshold for convergence
 						)
-	println("算法end")
 	# Beautify output
 	# McCullagh_test result header
 	header = [:pval, :padj, :n11, :n12, :n13, :n21, :n22, :n23, :n31, :n32, :n33, :Δ1, :Δ2, :se, :z1, :up_down]
@@ -675,19 +673,6 @@ function reoa(
 	@info "INFO: The expression profile and metadata file after pseudobulk are $(join([fn_stem, "df_expr.tsv"], "_")) and $(join([fn_stem, "df_meta.tsv"], "_"))"
 	gene_up_down = DataFrame(hcat(gene_names, reduce(hcat, [result[:,i*16 + 1] for i in 1:fld(size(result)[2],16)])),:auto)
 	CSV.write(join([fn_stem, "gene_up_down.tsv"], "_"), rename!(gene_up_down,((mg == 2) ? ["gene_name", string(g_name[1], "_vs_", g_name[2])] : ["gene_name"; string.(g_name, "_vs_other")])), delim = '\t')
-	# for i in 1:mg
-	# 	g_sit = (meta_group.Group .== g_name[i])
-	# 	outcome_result = DataFrame(result[:,(2 + 16*(i - 1)):(1 + 16*i)],header)
-	# 	insertcols!(outcome_result,   1, :genename => result[:,1])
-	# 	inds = ((sum.(eachrow(df_expr[:,g_sit])) .> min_features) .&& (sum.(eachrow(df_expr[:,.!g_sit])) .> min_features))
-	# 	outcome_result = outcome_result[inds,:]
-	# 	df_expr = df_expr[inds,:]
-	# 	gene_names = gene_names[inds,:]
-	# 	CSV.write(join([fn_stem,g_name[i],"result.tsv"], "_"), outcome_result,  delim = '\t')
-	# 	plot_result(outcome_result, join([fn_stem,g_name[i]], "_"))
-	# 	plot_heatmap(df_expr[:,[1,g_sit]], df_expr[:,.!g_sit], join([fn_stem,g_name[i]], "_"), log1p = true)
-	# 	plot_heatmap(df_expr[(outcome_result.padj .<= padj_deg),g_sit], df_expr[(outcome_result.padj .<= padj_deg),.!g_sit], join([fn_stem, g_name[i], "degs"], "_"), log1p = true)
-	# end
     return gene_up_down
 end
 
