@@ -568,6 +568,8 @@ function reoa(
 	# Read in expression matrix
     @time expr = occursin(".rds",fn_expr) ? DataFrame(load(fn_expr),:auto) : (occursin(".RData",fn_expr) ? DataFrame(get(load(fn_expr),fn_stem,1),:auto) : CSV.read(fn_expr, DataFrame))
     @time meta = occursin(".rds",fn_meta) ? DataFrame(load(fn_meta),:auto) : (occursin(".RData",fn_meta) ? DataFrame(get(load(fn_meta),splitext(basename(fn_meta))[1],1),:auto) : CSV.read(fn_meta, DataFrame))
+	expr = hcat(expr[:,1],expr[:,[i ∈ meta[:,1] for i in names(expr)]])
+	expr = expr[:,vcat(1,indexin(meta[:,1],names(expr)))]
 	mr,mc= size(meta)
     # r,c  = size(expr)
 	# Check the compatability between meta data and expression matrix
