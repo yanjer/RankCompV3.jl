@@ -1,5 +1,7 @@
 # RankCompV3 
 
+Yan, J., Zeng, Q., & Wang, X. (2024). RankCompV3: a differential expression analysis algorithm based on relative expression orderings and applications in single-cell RNA transcriptomics. *BMC bioinformatics*, *25*(1), 259. https://doi.org/10.1186/s12859-024-05889-1
+
 RankCompV3 is a differential expression analysis algorithm based on relative expression ordering (REO) of gene pairs. It can be applied to bulk or single-cell RNA-sequencing (scRNA-seq) data, microarray gene expression profiles and proteomics profiles, etc. When applied in scRNA-seq data, it can run in single-cell mode or pseudo-bulk mode. The pseudo-bulk mode is expected to improve the accuracy while decreasing runntime and memory cost. 
 
 ## 1 Used in the Julia language
